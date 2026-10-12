@@ -15,9 +15,47 @@ export function Navbar() {
     const handleScroll = () => {
       setScrolled(window.scrollY > 50);
     };
+    handleScroll();
     window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
+
+  useEffect(() => {
+    const sectionIds = ['about', 'services', 'properties', 'branches', 'careers', 'articles', 'contact'];
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const visible = entries
+          .filter((entry) => entry.isIntersecting)
+          .sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
+
+        if (visible?.target.id) {
+          setActiveSection(visible.target.id);
+        }
+      },
+      { rootMargin: '-35% 0px -55% 0px', threshold: [0.1, 0.25, 0.5] }
+    );
+
+    sectionIds.forEach((id) => {
+      const element = document.getElementById(id);
+      if (element) observer.observe(element);
+    });
+
+    return () => observer.disconnect();
+  }, []);
+
+  useEffect(() => {
+    document.body.style.overflow = mobileOpen ? 'hidden' : '';
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setMobileOpen(false);
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.body.style.overflow = '';
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [mobileOpen]);
 
   const navItems = [
     { key: 'home', href: '/', label: t.nav.home },
@@ -60,7 +98,7 @@ export function Navbar() {
 
           <div className="hidden lg:flex items-center gap-1">
             {navItems.slice(1).map((item) => (
-              <a
+              <Link
                 key={item.key}
                 href={item.href}
                 className={cn(
@@ -70,7 +108,7 @@ export function Navbar() {
               >
                 {item.label}
                 <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-0 h-0.5 bg-brand-gold transition-all duration-300 group-hover:w-full" />
-              </a>
+              </Link>
             ))}
           </div>
 
@@ -115,7 +153,7 @@ export function Navbar() {
       >
         <div className="flex flex-col items-center justify-center h-full gap-6">
           {navItems.map((item, i) => (
-            <a
+            <Link
               key={item.key}
               href={item.href}
               onClick={() => setMobileOpen(false)}
@@ -126,7 +164,7 @@ export function Navbar() {
               style={{ animationDelay: `${i * 0.1}s` }}
             >
               {item.label}
-            </a>
+            </Link>
           ))}
           <button
             onClick={() => setLocale(locale === 'th' ? 'en' : 'th')}

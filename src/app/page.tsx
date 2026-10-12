@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect } from 'react';
+import React from 'react';
 import dynamic from 'next/dynamic';
 import { Navbar } from '@/components/Navbar';
 import { Footer } from '@/components/Footer';
@@ -15,7 +15,6 @@ import {
   CTASection,
   ContactSection,
 } from '@/components/sections';
-import type { BuildingConfig } from '@/types';
 
 const HeroScene = dynamic(
   () => import('@/components/three/HeroScene').then((mod) => mod.HeroScene),
@@ -27,10 +26,6 @@ function HeroBackdrop() {
 }
 
 export default function HomePage() {
-  useEffect(() => {
-    document.title = 'The Valuation & Consultants | ประเมินอสังหาริมทรัพย์ ประเมินที่ดิน';
-  }, []);
-
   return (
     <main className="relative min-h-screen bg-brand-navy text-white">
       <Navbar />

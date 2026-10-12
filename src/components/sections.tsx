@@ -8,6 +8,7 @@ import {
   Group,
 } from 'three';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useI18n } from '@/context/I18nContext';
 
 function FloatingShape({
@@ -236,9 +237,11 @@ export function AboutSection() {
 
           <div className="relative">
             <div className="relative rounded-2xl overflow-hidden aspect-[4/3] group">
-              <img
+              <Image
                 src="/images/hero-slide.jpg"
                 alt={t.about.title}
+                fill
+                sizes="(min-width: 1024px) 50vw, 100vw"
                 className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-brand-navy/80 via-transparent to-transparent" />
@@ -618,7 +621,19 @@ export function ContactSection() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    const subject = encodeURIComponent(`Website inquiry from ${formState.name}`);
+    const body = encodeURIComponent(
+      [
+        `Name: ${formState.name}`,
+        `Email: ${formState.email}`,
+        `Phone: ${formState.phone || '-'}`,
+        '',
+        formState.message,
+      ].join('\n')
+    );
+
     setSubmitted(true);
+    window.location.href = `mailto:info@thevaluation.com?subject=${subject}&body=${body}`;
     setTimeout(() => setSubmitted(false), 3000);
   };
 
@@ -694,7 +709,7 @@ export function ContactSection() {
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                 </svg>
-                ส่งข้อความเรียบร้อยแล้ว เราจะติดต่อกลับโดยเร็ว
+                กำลังเปิดอีเมลเพื่อส่งข้อความถึงเรา
               </div>
             )}
 
