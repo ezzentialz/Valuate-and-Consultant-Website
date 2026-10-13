@@ -1,5 +1,8 @@
 import type { TranslationKeys } from '@/types';
 
+// All copy below is taken from the live thevaluation.com export (thevaluation_export).
+// Where the source gives no detail for an item, the description is left empty rather than invented.
+
 export const translations: Record<'th' | 'en', TranslationKeys> = {
   th: {
     nav: {
@@ -14,102 +17,96 @@ export const translations: Record<'th' | 'en', TranslationKeys> = {
     },
     hero: {
       title: 'บริษัท เดอะแวลูเอชั่น แอนด์ คอนซัลแทนท์ส จำกัด',
-      subtitle: 'ผู้นำการประเมินมูลค่าทรัพย์สินของคนไทย กว่า 30 ปี',
+      subtitle: 'คุณภาพก้าวไกล โปร่งใส ยุติธรรม',
       cta: 'สำรวจบริการของเรา',
       scrollDown: 'เลื่อนลงเพื่อดูเพิ่มเติม',
     },
     about: {
       title: 'เกี่ยวกับเรา',
-      subtitle: 'ประสบการณ์กว่า 30 ปีในการประเมินมูลค่าทรัพย์สิน',
+      subtitle: 'บริษัทประเมินมูลค่าทรัพย์สินของคนไทย',
       description:
-        'บริษัท เดอะแวลูเอชั่น แอนด์ คอนซัลแทนท์ส จำกัด ก่อตั้งขึ้นในปี พ.ศ. 2535 เป็นบริษัทประเมินมูลค่าทรัพย์สินชั้นนำของประเทศไทย ให้บริการครบทุกประเภท ทั้งภาครัฐและเอกชน ด้วยทีมงานผู้เชี่ยวชาญมากกว่า 100 ท่าน',
+        'บริษัท เดอะแวลูเอชั่น แอนด์ คอนซัลแทนท์ส จำกัด เป็นบริษัทประเมินมูลค่าทรัพย์สินของคนไทย ก่อตั้งเมื่อปี 2535 ให้บริการทั้งภาครัฐบาลและเอกชน อาทิ ธนาคาร/สถาบันการเงิน ที่ปรึกษาด้านการเงิน/การลงทุน ผู้ตรวจสอบบัญชี/สำนักงานกฎหมาย กลุ่มโรงงานอุตสาหกรรม โรงแรม สถาบันการศึกษา และหน่วยงานของรัฐ ทั้งในระดับชาติและระดับสากล เป็นบริษัทประเมินที่ได้รับการเห็นชอบจากกรมการประกันภัยและ ก.ล.ต. และเป็นสมาชิกสมาคมนักประเมินราคาอิสระไทย',
       stats: {
-        years: 'ปีประสบการณ์',
-        projects: 'โครงการที่สำเร็จ',
-        clients: 'ลูกค้าที่เชื่อมั่น',
-        branches: 'สาขาทั่วไทย',
+        years: 'ก่อตั้งเมื่อ พ.ศ.',
+        projects: 'ขอบเขตงานบริการ',
+        clients: 'กรรมการบริหาร',
+        branches: 'สาขาในภูมิภาค',
       },
-      readMore: 'อ่านเพิ่มเติม',
+      readMore: 'ดูบริการของเรา',
     },
     services: {
       title: 'บริการของเรา',
-      subtitle: 'บริการประเมินมูลค่าครบทุกประเภท ตามมาตรฐานสากล',
+      subtitle: 'ขอบเขตการทำงานของบริษัท',
       items: [
         {
-          title: 'ประเมินมูลค่าอสังหาริมทรัพย์',
+          title: 'งานประเมินมูลค่าอสังหาริมทรัพย์',
           description:
-            'ที่ดิน อาคารพักอาศัย โครงการพัฒนา อาคารสำนักงาน ห้างสรรพสินค้า โรงแรม รีสอร์ท โรงงาน คลังสินค้า',
+            'ที่ดิน อาคารพักอาศัย โครงการพัฒนา อาคารชุด อาคารสำนักงาน โรงแรม รีสอร์ท อพาร์ทเมนท์ ห้างสรรพสินค้า โรงงาน โกดัง และเหมืองแร่',
           icon: 'building',
         },
         {
-          title: 'ประเมินเครื่องจักรและอุปกรณ์',
+          title: 'งานประเมินเครื่องจักรและอุปกรณ์',
           description:
-            'เครื่องจักรกลหนัก เครื่องจักรอุตสาหกรรม อุปกรณ์ผลิต เครื่องจักรไฟฟ้าและพลังงานทดแทน',
+            'เครื่องจักรและอุปกรณ์ในอุตสาหกรรมผลิต โรงไฟฟ้าหลักและพลังงานทดแทน การขนส่ง เช่น รถ เรือ เครื่องบิน และเครื่องจักรกลหนัก',
           icon: 'cog',
         },
         {
-          title: 'ประเมินมูลค่าธุรกิจ',
-          description:
-            'การประเมินหุ้น การร่วมกิจการ M&A การจัดสรรราคาซื้อ การทดสอบความสูญเสียมูลค่า',
+          title: 'งานประเมินมูลค่าธุรกิจ',
+          description: 'เพื่อกำหนดมูลค่าหุ้น ร่วมกิจการ และแลกเปลี่ยนมูลค่าหุ้น',
           icon: 'chart',
         },
         {
-          title: 'สำรวจและวิจัยความเป็นไปได้',
-          description:
-            'ศึกษาความเป็นไปได้โครงการ วิเคราะห์ตลาด วิเคราะห์การเงิน แผนธุรกิจ',
+          title: 'งานสำรวจและวิจัย & ศึกษาความเป็นไปได้',
+          description: '',
           icon: 'search',
         },
         {
-          title: 'ที่ปรึกษาการลงทุนและขายทรัพย์สิน',
-          description:
-            'ค้นหาลูกค้าซื้อ/เช่า การตลาดทรัพย์สิน การเจรจาราคา ปิดการขาย',
+          title: 'งานขายอสังหาริมทรัพย์',
+          description: 'ซื้อ ขาย เช่า และรับฝากขายทรัพย์สิน',
           icon: 'handshake',
         },
         {
-          title: 'บริหารและจัดการทรัพย์สิน',
-          description:
-            'การดูแลทรัพย์สิน การให้เช่า การบำรุงรักษา รายงานผลการดำเนินงาน',
+          title: 'งานที่ปรึกษาการลงทุน',
+          description: '',
           icon: 'briefcase',
         },
         {
-          title: 'ตรวจสอบอาคารและสถาปัตยกรรม',
-          description:
-            'สำรวจสภาพอาคาร ตรวจสอบโครงสร้าง ประเมินสภาพชำรุด แผนซ่อมบำรุง',
+          title: 'งานบริหารและจัดการทรัพย์สิน',
+          description: '',
           icon: 'shield',
         },
         {
-          title: 'งานประเมินเพื่อวัตถุประสงค์พิเศษ',
-          description:
-            'หลักทรัพย์กู้ยืม บัญชี/ภาษี มรดก การอุทธรณ์ ระบบบริหารทรัพย์สินของธนาคาร',
+          title: 'งานตรวจสอบอาคาร',
+          description: '',
           icon: 'file',
         },
       ],
     },
     properties: {
       title: 'ทรัพย์สิน ซื้อ / ขาย / เช่า',
-      subtitle: 'ค้นหาทรัพย์สินที่เหมาะสมกับคุณ',
+      subtitle: 'ประเภท ซื้อ / ขาย / เช่า อสังหาฯ',
       buy: 'ต้องการซื้อ',
       rent: 'ต้องการเช่า',
       sell: 'ต้องการฝากขาย',
       agent: 'สนใจเป็นตัวแทนขาย',
     },
     branches: {
-      title: 'สาขาของเรา',
-      subtitle: 'ให้บริการทั่วประเทศไทย',
+      title: 'สำนักงานสาขา',
+      subtitle: 'สำนักงานใหญ่กรุงเทพฯ และสาขาในภูมิภาค',
     },
     careers: {
       title: 'ร่วมงานกับเรา',
-      subtitle: 'เป็นส่วนหนึ่งของทีมผู้เชี่ยวชาญชั้นนำ',
+      subtitle: 'ตำแหน่งงานว่าง',
       apply: 'สมัครงาน',
     },
     articles: {
-      title: 'บทความวิจัยและข่าวสาร',
-      subtitle: 'ความรู้และข้อมูลล่าสุดจากทีมวิจัยของเรา',
-      readMore: 'อ่านต่อ',
+      title: 'บทความวิจัย',
+      subtitle: 'บทความจากทีมงานเดอะแวลูเอชั่น',
+      readMore: 'อ่านบนเว็บไซต์หลัก',
     },
     contact: {
       title: 'ติดต่อเรา',
-      subtitle: 'พร้อมให้คำปรึกษาและบริการทุกเมื่อ',
+      subtitle: 'สอบถามข้อมูลเพิ่มเติม',
       name: 'ชื่อ-นามสกุล',
       email: 'อีเมล',
       phone: 'เบอร์โทรศัพท์',
@@ -137,102 +134,96 @@ export const translations: Record<'th' | 'en', TranslationKeys> = {
     },
     hero: {
       title: 'The Valuation & Consultants Co., Ltd.',
-      subtitle: "Thailand's Leading Property Valuation Expert for Over 30 Years",
+      subtitle: 'Advanced Quality, Transparency and Fairness',
       cta: 'Explore Our Services',
       scrollDown: 'Scroll to Discover More',
     },
     about: {
       title: 'About Us',
-      subtitle: 'Over 30 Years of Property Valuation Excellence',
+      subtitle: 'A Thai-owned property valuation company',
       description:
-        'The Valuation & Consultants Co., Ltd. was established in 1992 as Thailand\'s premier property valuation firm. We provide comprehensive valuation services for all property types, serving both public and private sectors with a team of over 100 certified experts.',
+        'The Valuation and Consultants Company Limited is a Thai-owned property valuation company established in 1992. We serve both the government and private sectors, including banks and financial institutions, financial and investment advisors, law firms, industrial groups, hotels, educational institutions and government agencies, at national and international level. We are approved by the Department of Insurance and the Securities and Exchange Commission (SEC), and are a member of the Thai Independent Appraisers Association.',
       stats: {
-        years: 'Years Experience',
-        projects: 'Successful Projects',
-        clients: 'Trusted Clients',
-        branches: 'Branches Nationwide',
+        years: 'Established',
+        projects: 'Service Lines',
+        clients: 'Executive Committee',
+        branches: 'Regional Branches',
       },
-      readMore: 'Read More',
+      readMore: 'View Our Services',
     },
     services: {
       title: 'Our Services',
-      subtitle: 'Comprehensive Valuation Services Meeting International Standards',
+      subtitle: 'Scope of work',
       items: [
         {
-          title: 'Real Estate Valuation',
+          title: 'Property Valuation',
           description:
-            'Land, residential buildings, development projects, office buildings, shopping centers, hotels, resorts, factories, warehouses',
+            'Land, residential buildings, development projects, condominiums, office buildings, hotels, resorts, apartments, malls, factories, warehouses and mines',
           icon: 'building',
         },
         {
-          title: 'Machinery & Equipment Valuation',
+          title: 'Machinery and Equipment Valuation',
           description:
-            'Heavy machinery, industrial equipment, production machinery, electrical machinery and renewable energy',
+            'Machinery and equipment in industrial production, main power plants and renewable energy, transportation such as vehicles, ships and aircraft, and heavy equipment',
           icon: 'cog',
         },
         {
           title: 'Business Valuation',
-          description:
-            'Share valuation, M&A, purchase price allocation, impairment testing',
+          description: 'For use as capital, determining share value, and venture and exchange of share value',
           icon: 'chart',
         },
         {
-          title: 'Feasibility Studies & Research',
-          description:
-            'Project feasibility analysis, market research, financial analysis, business planning',
+          title: 'Survey, Research & Feasibility Study',
+          description: '',
           icon: 'search',
         },
         {
-          title: 'Investment Advisory & Property Sales',
-          description:
-            'Buyer/tenant sourcing, property marketing, price negotiation, deal closing',
+          title: 'Real Estate Sales',
+          description: 'Buy, sell and rent properties',
           icon: 'handshake',
         },
         {
-          title: 'Asset Management',
-          description:
-            'Property maintenance, leasing management, upkeep, performance reporting',
+          title: 'Investment Advisory',
+          description: '',
           icon: 'briefcase',
         },
         {
-          title: 'Building Inspection & Architecture',
-          description:
-            'Building condition surveys, structural assessment, deterioration evaluation, maintenance planning',
+          title: 'Property Management',
+          description: '',
           icon: 'shield',
         },
         {
-          title: 'Special Purpose Valuation',
-          description:
-            'Loan collateral, accounting/tax, inheritance, litigation, bank asset management systems',
+          title: 'Building Inspection',
+          description: '',
           icon: 'file',
         },
       ],
     },
     properties: {
       title: 'Properties Buy / Sell / Rent',
-      subtitle: 'Find the Perfect Property for You',
+      subtitle: 'Buy / Sell / Rent real estate',
       buy: 'Want to Buy',
       rent: 'Want to Rent',
       sell: 'Want to Sell',
-      agent: 'Become an Agent',
+      agent: 'Join as Sales Representative',
     },
     branches: {
-      title: 'Our Branches',
-      subtitle: 'Serving Nationwide Across Thailand',
+      title: 'Branch Offices',
+      subtitle: 'Bangkok head office and regional branches',
     },
     careers: {
-      title: 'Join Our Team',
-      subtitle: 'Be Part of Thailand\'s Leading Valuation Experts',
-      apply: 'Apply Now',
+      title: 'Careers',
+      subtitle: 'Available positions',
+      apply: 'Apply',
     },
     articles: {
-      title: 'Research Articles & News',
-      subtitle: 'Latest Insights from Our Research Team',
-      readMore: 'Read More',
+      title: 'Research Articles',
+      subtitle: 'Articles from The Valuation team',
+      readMore: 'Read on the main website',
     },
     contact: {
       title: 'Contact Us',
-      subtitle: 'Ready to Provide Expert Consultation Anytime',
+      subtitle: 'Get in touch',
       name: 'Full Name',
       email: 'Email',
       phone: 'Phone Number',

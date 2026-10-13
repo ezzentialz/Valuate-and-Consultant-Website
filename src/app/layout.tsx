@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { I18nProvider } from '@/context/I18nContext';
+import { MotionRoot, ScrollProgress, SmoothScroll } from '@/components/motion';
 import './globals.css';
 
 export const metadata: Metadata = {
@@ -16,7 +17,13 @@ export default function RootLayout({
   return (
     <html lang="th">
       <body>
-        <I18nProvider>{children}</I18nProvider>
+        <I18nProvider>
+          <MotionRoot>
+            <SmoothScroll />
+            <ScrollProgress />
+            {children}
+          </MotionRoot>
+        </I18nProvider>
       </body>
     </html>
   );

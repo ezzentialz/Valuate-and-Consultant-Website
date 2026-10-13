@@ -60,7 +60,7 @@ export function Footer() {
                 เขตห้วยขวาง กรุงเทพฯ 10310
               </p>
               <p>{locale === 'th' ? 'โทร.' : 'Tel'} 0-2717-0801-8</p>
-              <p>{locale === 'th' ? 'มือถือ' : 'Mobile'} 081-512-9411, 083-888-4810</p>
+              <p>{locale === 'th' ? 'มือถือ' : 'Mobile'} 081-512-9411, 084-692-8851</p>
               <p>{locale === 'th' ? 'โทรสาร' : 'Fax'} 0-2717-0800</p>
               <p>
                 <a href="mailto:info@thevaluation.com" className="hover:text-brand-gold transition-colors">
@@ -85,12 +85,6 @@ export function Footer() {
           <p className="text-white/40 text-xs">
             © {year} The Valuation & Consultants Co., Ltd. {t.footer.rights}.
           </p>
-          <div className="flex items-center gap-6 text-xs text-white/40">
-            <span className="flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-brand-gold animate-pulse" />
-              {locale === 'th' ? 'เปิดทำการ จันทร์-ศุกร์ 8:30-17:30 น.' : 'Mon-Fri 8:30-17:30'}
-            </span>
-          </div>
         </div>
       </div>
     </footer>

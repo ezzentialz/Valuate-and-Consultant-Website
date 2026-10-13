@@ -1,271 +1,139 @@
 'use client';
 
-import React, { useRef, useMemo } from 'react';
-import { Canvas, useFrame } from '@react-three/fiber';
-import { Float } from '@react-three/drei';
-import {
-  Color,
-  Group,
-} from 'three';
-import Link from 'next/link';
-import Image from 'next/image';
+import React, { useEffect, useState } from 'react';
+import { AnimatePresence, motion } from 'framer-motion';
 import { useI18n } from '@/context/I18nContext';
+import { serviceIcons } from '@/components/icons';
+import { PropertyInquiry } from '@/components/PropertyInquiry';
+import { Chapter, CountUp, EASE, MaskedTitle, ParallaxImage, Reveal, TiltCard } from '@/components/motion';
 
-function FloatingShape({
-  geometry,
-  position,
-  color,
-  scale = 1,
-  speed = 1,
-}: {
-  geometry: 'box' | 'octa' | 'ico' | 'torus';
-  position: [number, number, number];
-  color: number;
-  scale?: number;
-  speed?: number;
-}) {
-  const ref = useRef<Group>(null);
+// All copy is taken from the live thevaluation.com export. Typos in the source
+// ("อสังหริมทรัพย์", "อุธรณ์") are corrected; nothing else is reworded.
 
-  useFrame((state) => {
-    if (ref.current) {
-      ref.current.rotation.x = state.clock.elapsedTime * 0.3 * speed;
-      ref.current.rotation.y = state.clock.elapsedTime * 0.4 * speed;
-      ref.current.position.y = position[1] + Math.sin(state.clock.elapsedTime * speed) * 0.3;
-    }
-  });
+const IMG = '/images/real';
 
-  const geomProps = {
-    box: <boxGeometry args={[1, 1, 1]} />,
-    octa: <octahedronGeometry args={[0.8]} />,
-    ico: <icosahedronGeometry args={[0.8]} />,
-    torus: <torusGeometry args={[0.6, 0.2, 16, 32]} />,
-  }[geometry];
+/* ------------------------------------------------------------------ */
+/* About                                                               */
+/* ------------------------------------------------------------------ */
 
-  return (
-    <group ref={ref} position={position} scale={scale}>
-      <Float speed={2} rotationIntensity={0.4} floatIntensity={0.6}>
-        <mesh>
-          {geomProps}
-          <meshStandardMaterial
-            color={new Color(color)}
-            metalness={0.8}
-            roughness={0.2}
-            wireframe
-          />
-        </mesh>
-      </Float>
-    </group>
-  );
-}
+const ABOUT_TEXT = {
+  th: [
+    'บริษัท เดอะแวลูเอชั่น แอนด์ คอนซัลแทนท์ส จำกัด เป็นบริษัทประเมินมูลค่าทรัพย์สินของคนไทย ก่อตั้งเมื่อปี 2535 โดยให้บริการการประเมินมูลค่าทรัพย์สิน ทั้งภาครัฐบาลและเอกชน อาทิเช่น ธนาคาร/สถาบันการเงิน ที่ปรึกษาด้านการเงิน/การลงทุน ผู้ตรวจสอบบัญชี/สำนักงานกฎหมาย กลุ่มโรงงานอุตสาหกรรม โรงแรม สถาบันการศึกษา หน่วยงานของรัฐ ฯลฯ',
+    'บริษัท เดอะแวลูเอชั่นฯ สามารถให้บริการด้านการประเมินมูลค่าทรัพย์สิน แก่ลูกค้าที่อยู่ในธุรกิจการเงิน การธนาคาร อสังหาริมทรัพย์ อุตสาหกรรมและลูกค้าทั่วไปได้ ทั้งในระดับชาติและระดับสากล อีกทั้งยังเป็นบริษัทประเมินมูลค่า ที่ได้รับการเห็นชอบจาก กรมการประกันภัย สำนักงานคณะกรรมการกำกับหลักทรัพย์ และตลาดหลักทรัพย์ (กลต.) และเป็นสมาชิก สมาคมนักประเมินราคาอิสระไทย สมาคมผู้ประเมินค่าทรัพย์สินแห่งประเทศไทย',
+    'จากความรู้ความสามารถ ประสบการณ์ และความเชี่ยวชาญของบุคลากรที่มีอยู่ ผนวกกับประสิทธิภาพในการจัดการของบริษัท เดอะแวลูเอชั่นฯ ทำให้สามารถให้บริการและตอบสนองความต้องการของลูกค้าได้เป็นอย่างดี',
+    'และด้วยประสบการณ์อันยาวนาน และความสำเร็จของบุคลากรของบริษัทฯ รวมกับความมุ่งมั่นที่จะให้บริการที่มีคุณภาพตามมาตรฐานสากล ได้กลายมาเป็น ปรัชญาในการทำงานของบริษัท เดอะ แวลูเอชั่นฯ เพื่อที่จะสามารถให้บริการแก่ลูกค้าได้รวดเร็ว ถูกต้อง และมีประสิทธิภาพ',
+  ],
+  en: [
+    'The Valuation and Consultants Company Limited is provides the properties valuation services which owned by Thai. Established in 1992, providing property valuation services for both the government and private sectors such as Banks/Financial Institutions, Financial Advisor/Investment, Law Firm, Industrial Groups, Hotels, Educational Institutions, Government agencies, etc.',
+    'We can providing the properties valuation services to clients in the financial business, banking, real estate, industry business and etc. For both national and international, which have been approved by Department of Insurance, Securities Commission and Stock Exchange (SEC). We are also a member of Thai Independent Appraisers Association from Appraisers Properties Association of Thailand.',
+    'With the knowledge, ability, experienced and existing personnel expertise combined with the efficiency of company’s management. The company makes it possible to serve and meet the needs of clients.',
+    'The long experience, achievements of the company’s personnel and the commitment to provide quality services according to international standards has become the philosophy of The Company to provide fast, accurate and efficient service to clients.',
+  ],
+};
 
-function HeroCanvas() {
-  const shapes = useMemo(
-    () => [
-      { geometry: 'octa' as const, position: [-6, 2, -2] as [number, number, number], color: 0xc8a951, scale: 1.2, speed: 0.8 },
-      { geometry: 'box' as const, position: [6, 1, -3] as [number, number, number], color: 0x4a8ac8, scale: 0.9, speed: 1.1 },
-      { geometry: 'ico' as const, position: [4, 4, -5] as [number, number, number], color: 0xc85a8a, scale: 0.7, speed: 1.3 },
-      { geometry: 'torus' as const, position: [-5, 5, -6] as [number, number, number], color: 0x8ac84a, scale: 0.8, speed: 0.9 },
-    ],
-    []
-  );
-
-  return (
-    <Canvas
-      dpr={[1, 1.5]}
-      camera={{ position: [0, 2, 12], fov: 60 }}
-      gl={{ antialias: true, alpha: true }}
-      style={{ background: 'transparent' }}
-    >
-      <ambientLight intensity={0.5} />
-      <pointLight position={[10, 10, 10]} intensity={1} color={new Color(0xc8a951)} />
-      <pointLight position={[-10, -5, 10]} intensity={0.5} color={new Color(0x4a8ac8)} />
-      {shapes.map((shape, i) => (
-        <FloatingShape key={i} {...shape} />
-      ))}
-    </Canvas>
-  );
-}
-
-export function HeroSection() {
-  const { t } = useI18n();
-
-  return (
-    <section id="hero" className="relative h-screen overflow-hidden flex items-center">
-      <div className="absolute inset-0">
-        <HeroCanvas />
-      </div>
-
-      <div className="section-container relative z-10 pt-20">
-        <div className="max-w-3xl">
-          <div className="inline-flex items-center gap-3 mb-8 animate-fade-in">
-            <span className="w-12 h-px bg-brand-gold" />
-            <span className="text-brand-gold text-sm font-semibold uppercase tracking-[0.3em]">
-              {t.hero.subtitle.split(' ')[0]}
-            </span>
-          </div>
-
-          <h1 className="font-display text-5xl sm:text-6xl lg:text-7xl font-bold text-white leading-[1.1] mb-8 animate-slide-up">
-            {t.hero.title.split(' ').slice(0, 3).join(' ')}
-            <br />
-            <span className="text-gradient-gold">
-              {t.hero.title.split(' ').slice(3).join(' ')}
-            </span>
-          </h1>
-
-          <p className="text-xl text-white/70 mb-12 max-w-xl leading-relaxed animate-slide-up" style={{ animationDelay: '0.2s' }}>
-            {t.hero.subtitle}
-          </p>
-
-          <div className="flex flex-wrap gap-4 animate-slide-up" style={{ animationDelay: '0.4s' }}>
-            <a href="#services" className="btn-primary">
-              {t.hero.cta}
-            </a>
-            <a href="#contact" className="btn-secondary">
-              {t.nav.contact}
-            </a>
-          </div>
-        </div>
-      </div>
-
-      <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 animate-bounce">
-        <span className="text-white/40 text-xs uppercase tracking-widest">
-          {t.hero.scrollDown}
-        </span>
-        <svg className="w-5 h-5 text-brand-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
-        </svg>
-      </div>
-    </section>
-  );
-}
-
-const serviceIcons: Record<string, React.ReactNode> = {
-  building: (
-    <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-    </svg>
-  ),
-  cog: (
-    <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-    </svg>
-  ),
-  chart: (
-    <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-    </svg>
-  ),
-  search: (
-    <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-    </svg>
-  ),
-  handshake: (
-    <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 4v16m8-8H4" />
-    </svg>
-  ),
-  briefcase: (
-    <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 9V7a4 4 0 00-8 0v2M5 9h14l-1 11a2 2 0 01-2 2H8a2 2 0 01-2-2L5 9z" />
-    </svg>
-  ),
-  shield: (
-    <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-    </svg>
-  ),
-  file: (
-    <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-    </svg>
-  ),
+const EXECUTIVES = {
+  th: [
+    { name: 'นายมานพ วรรณะเอี่ยมพิกุล', role: 'กรรมการผู้จัดการ' },
+    { name: 'นายยงยุทธ ศรีตุลานนท์', role: 'กรรมการฝ่ายบริหาร' },
+    { name: 'นายกิตติคุณ ศิริไชยยากุล', role: 'รองกรรมการผู้จัดการ' },
+    { name: 'นายศุภฤกษ์ อัครกิจกุลชัย', role: 'รองกรรมการผู้จัดการ · ผู้อำนวยการฝ่ายประเมินมูลค่าเครื่องจักรและอุปกรณ์' },
+    { name: 'นางสาวพวงเพ็ญ สุมิพันธ์', role: 'รองกรรมการผู้จัดการ · ผู้อำนวยการฝ่ายการตลาด' },
+  ],
+  en: [
+    { name: 'Mr. Manop Wanna Iamphikul', role: 'Managing Director' },
+    { name: 'Mr. Yongyuth Sritulanont', role: 'Executive Director' },
+    { name: 'Mr. Kittikhun Sirichayayakul', role: 'Deputy Managing Director' },
+    { name: 'Mr. Supalert Akarakijkulchai', role: 'Deputy Managing Director · Machinery and Equipment Director' },
+    { name: 'Ms. Puangpen Sumiphan', role: 'Deputy Managing Director · Marketing Director' },
+  ],
 };
 
 export function AboutSection() {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
+  const th = locale === 'th';
+  const paragraphs = ABOUT_TEXT[locale];
 
+  // Facts from the site: founded 1992 (B.E. 2535), 8 service lines, 5 executives, 6 regional branches.
   const stats = [
-    { value: '30+', label: t.about.stats.years },
-    { value: '2,500+', label: t.about.stats.projects },
-    { value: '800+', label: t.about.stats.clients },
-    { value: '8', label: t.about.stats.branches },
+    { to: th ? 2535 : 1992, label: t.about.stats.years },
+    { to: 8, label: t.about.stats.projects },
+    { to: 5, label: t.about.stats.clients },
+    { to: 6, label: t.about.stats.branches },
   ];
 
   return (
-    <section id="about" className="relative py-32 bg-brand-navy overflow-hidden">
-      <div className="absolute inset-0 opacity-5">
-        <div className="absolute inset-0 animate-grid" style={{
-          backgroundImage: `linear-gradient(rgba(200,169,81,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(200,169,81,0.1) 1px, transparent 1px)`,
-          backgroundSize: '50px 50px',
-        }} />
-      </div>
+    <section id="about" className="relative overflow-hidden bg-brand-navy py-32">
+      <div className="pointer-events-none absolute -left-40 top-20 hidden md:block h-[34rem] w-[34rem] rounded-full bg-brand-gold/[0.07] blur-[120px]" />
 
       <div className="section-container relative">
-        <div className="grid lg:grid-cols-2 gap-16 items-center">
+        <div className="grid items-start gap-16 lg:grid-cols-[1.05fr_1fr]">
           <div>
-            <span className="section-subtitle">{t.about.subtitle}</span>
-            <h2 className="section-title text-white mb-8">{t.about.title}</h2>
-            <p className="text-white/70 text-lg leading-relaxed mb-8">
-              {t.about.description}
-            </p>
+            <Chapter no="01" label={t.nav.about} />
+            <MaskedTitle lines={[t.about.title]} className="mb-10" />
 
-            <div className="grid grid-cols-2 gap-6 mb-10">
-              {stats.map((stat, i) => (
-                <div
-                  key={i}
-                  className="glass-panel p-6 hover:border-brand-gold/40 transition-all duration-500 group"
-                >
-                  <div className="text-4xl font-display font-bold text-brand-gold mb-2 group-hover:scale-110 transition-transform duration-500">
-                    {stat.value}
-                  </div>
-                  <div className="text-white/60 text-sm uppercase tracking-wider">
-                    {stat.label}
-                  </div>
-                </div>
+            <div className="space-y-6">
+              {paragraphs.map((p, i) => (
+                <Reveal key={i} delay={i * 0.06} y={28}>
+                  <p className="text-lg leading-relaxed text-white/70">{p}</p>
+                </Reveal>
               ))}
             </div>
-
-            <a href="#services" className="btn-secondary inline-flex items-center gap-2">
-              {t.about.readMore}
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
-              </svg>
-            </a>
           </div>
 
-          <div className="relative">
-            <div className="relative rounded-2xl overflow-hidden aspect-[4/3] group">
-              <Image
-                src="/images/hero-slide.jpg"
+          <Reveal x={50} y={0} className="lg:sticky lg:top-28">
+            <div className="relative">
+              <ParallaxImage
+                src={`${IMG}/about.jpg`}
                 alt={t.about.title}
-                fill
-                sizes="(min-width: 1024px) 50vw, 100vw"
-                className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110"
+                className="aspect-[4/5] rounded-2xl border border-brand-gold/20"
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-brand-navy/80 via-transparent to-transparent" />
-              <div className="absolute inset-0 border-2 border-brand-gold/20 rounded-2xl group-hover:border-brand-gold/60 transition-all duration-500" />
-
-              <div className="absolute bottom-6 left-6 right-6">
-                <div className="glass-panel p-4 backdrop-blur-xl">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-brand-gold/20 flex items-center justify-center">
-                      <span className="text-brand-gold font-bold">30</span>
+              <div className="pointer-events-none absolute inset-0 rounded-2xl bg-gradient-to-t from-brand-navy/85 via-transparent to-transparent" />
+              <div className="absolute inset-x-6 bottom-6 rounded-xl border border-white/10 bg-brand-navy/80 p-4 md:bg-white/5 md:backdrop-blur-xl">
+                <div className="flex items-center gap-3">
+                  <span className="flex h-10 w-10 items-center justify-center rounded-full bg-brand-gold/20 font-bold text-brand-gold">✓</span>
+                  <div>
+                    <div className="text-sm font-semibold text-white">
+                      {th ? 'ได้รับความเห็นชอบจาก ก.ล.ต.' : 'Approved by the SEC'}
                     </div>
-                    <div>
-                      <div className="text-white text-sm font-semibold">
-                        {t.about.stats.years}
-                      </div>
-                      <div className="text-brand-gold text-xs">1992 - 2026</div>
+                    <div className="text-xs text-brand-gold">
+                      {th ? 'และกรมการประกันภัย' : 'and the Department of Insurance'}
                     </div>
                   </div>
                 </div>
               </div>
+              <div className="absolute -right-5 -top-5 h-24 w-24 border-r-2 border-t-2 border-brand-gold/40" />
+              <div className="absolute -bottom-5 -left-5 h-24 w-24 border-b-2 border-l-2 border-brand-gold/40" />
             </div>
+          </Reveal>
+        </div>
 
-            <div className="absolute -top-6 -right-6 w-24 h-24 border-t-2 border-r-2 border-brand-gold/40" />
-            <div className="absolute -bottom-6 -left-6 w-24 h-24 border-b-2 border-l-2 border-brand-gold/40" />
+        {/* Numbers */}
+        <div className="mt-28 grid grid-cols-2 gap-5 lg:grid-cols-4">
+          {stats.map((s, i) => (
+            <Reveal key={i} delay={i * 0.08}>
+              <TiltCard className="rounded-xl border border-white/10 bg-white/[0.04] p-7 md:backdrop-blur-md">
+                <div className="font-display text-5xl font-bold text-brand-gold">
+                  <CountUp to={s.to} />
+                </div>
+                <div className="mt-3 text-xs uppercase tracking-wider text-white/55">{s.label}</div>
+              </TiltCard>
+            </Reveal>
+          ))}
+        </div>
+
+        {/* Executive committee */}
+        <div className="mt-28">
+          <Chapter no="—" label={th ? 'คณะกรรมการบริหาร' : 'Executive Committee'} />
+          <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+            {EXECUTIVES[locale].map((e, i) => (
+              <Reveal key={e.name} delay={i * 0.07}>
+                <TiltCard className="rounded-xl border border-white/10 bg-white/[0.04] p-6" max={6}>
+                  <div className="mb-4 h-px w-10 bg-brand-gold" />
+                  <div className="font-display text-xl text-white">{e.name}</div>
+                  <div className="mt-2 text-sm leading-relaxed text-white/55">{e.role}</div>
+                </TiltCard>
+              </Reveal>
+            ))}
           </div>
         </div>
       </div>
@@ -273,521 +141,695 @@ export function AboutSection() {
   );
 }
 
-function ServiceCard({
+/* ------------------------------------------------------------------ */
+/* Services                                                            */
+/* ------------------------------------------------------------------ */
+
+const SERVICES_TEXT = {
+  th: {
+    intro: 'นอกจากบริษัทเดอะแวลูเอชั่นฯ จะให้บริการด้านการประเมินมูลค่าทรัพย์สิน บริษัทฯ ยังให้บริการด้านต่างๆ ดังนี้',
+    scopeTitle: 'ขอบเขตการทำงาน',
+    scope: [
+      'งานประเมินมูลค่าอสังหาริมทรัพย์',
+      'งานประเมินเครื่องจักรและอุปกรณ์',
+      'งานประเมินมูลค่าธุรกิจ',
+      'งานสำรวจและวิจัย&ศึกษาความเป็นไปได้',
+      'งานขายอสังหาริมทรัพย์',
+      'งานที่ปรึกษาการลงทุน',
+      'งานบริหารและจัดการทรัพย์สิน',
+      'งานตรวจสอบอาคาร',
+    ],
+    objectivesTitle: 'วัตถุประสงค์ของการประเมินมูลค่าทรัพย์สิน',
+    objectives: [
+      'เพื่อเป็นหลักทรัพย์ในการกู้ยืม / จดจำนอง',
+      'เพื่อใช้ในการซื้อ – ขาย / เช่าทรัพย์สิน',
+      'เพื่อใช้เป็นข้อมูลทางด้านบัญชี',
+      'เพื่อใช้เป็นทุนทรัพย์ / กำหนดมูลค่าหุ้น',
+      'เพื่อร่วมกิจการ / แลกเปลี่ยนมูลค่าหุ้น',
+      'เพื่อใช้ประกอบการอุทธรณ์กรณีเวนคืนของทางราชการ',
+      'เพื่อการจัดการมรดกและอื่นๆ',
+    ],
+    typesTitle: 'ประเภทของทรัพย์สินที่ประเมินมูลค่า',
+    types: [
+      'ที่ดิน อาคารพักอาศัย โครงการพัฒนาต่างๆ',
+      'อาคารชุดพักอาศัย อาคารสำนักงาน',
+      'โรงแรม รีสอร์ท อพาร์ทเมนท์ ห้างสรรพสินค้า',
+      'โรงงานอุตสาหกรรม โกดัง คลังสินค้า และเหมืองแร่',
+      'เครื่องจักรและอุปกรณ์ที่ใช้ในอุตสาหกรรมผลิตต่างๆ',
+      'โรงไฟฟ้าหลักและพลังงานทดแทน',
+      'การขนส่งต่างๆ เช่น รถ เรือ และเครื่องบิน',
+      'เครื่องจักรกลหนัก',
+    ],
+  },
+  en: {
+    intro: 'In addition of provide property valuation services, the company also provides services as follows:',
+    scopeTitle: 'Scope of work',
+    scope: [
+      'Property valuation',
+      'Machinery and Equipment Evaluation',
+      'Business valuation',
+      'Survey and Research & Feasibility Study',
+      'Real Estate Sales',
+      'Investment Advisory Jobs',
+      'Property and management',
+      'Building inspection',
+    ],
+    objectivesTitle: 'Objectives of property valuation',
+    objectives: [
+      'For borrowing and mortgage',
+      'For buy, sell and rent properties',
+      'For accounting information',
+      'For use as capital and determining share value',
+      'For venture and exchange of share value',
+      'For use in the case of government expropriation',
+      'For inheritance and other management',
+    ],
+    typesTitle: 'The type of property appraised',
+    types: [
+      'Land, Residential building, and Various development projects',
+      'Condominium and Office building',
+      'Hotel, Resort, Apartment and Mall',
+      'Industrial factories, warehouses, warehouses and mines',
+      'Machinery & Equipment in various industrial production',
+      'Main power plant and renewable energy',
+      'Transportations such as, vehicle, ship, boat, barge and aircraft',
+      'Heavy Equipment',
+    ],
+  },
+};
+
+function ListPanel({
+  no,
   title,
-  description,
-  icon,
-  index,
+  items,
+  image,
+  flip,
 }: {
+  no: string;
   title: string;
-  description: string;
-  icon: string;
-  index: number;
+  items: string[];
+  image: string;
+  flip?: boolean;
 }) {
   return (
-    <div
-      className="card-3d group relative overflow-hidden"
-      style={{ animationDelay: `${index * 0.1}s` }}
-    >
-      <div className="absolute top-0 right-0 w-32 h-32 bg-brand-gold/5 rounded-full blur-2xl group-hover:bg-brand-gold/15 transition-all duration-500 -translate-y-1/2 translate-x-1/2" />
-
-      <div className="relative z-10">
-        <div className="w-16 h-16 rounded-xl bg-brand-gold/10 border border-brand-gold/20 flex items-center justify-center text-brand-gold mb-6 group-hover:bg-brand-gold group-hover:text-brand-navy group-hover:rotate-12 transition-all duration-500">
-          {serviceIcons[icon]}
+    <div className="grid items-center gap-12 lg:grid-cols-2 lg:gap-20">
+      <Reveal x={flip ? 60 : -60} y={0} className={flip ? 'lg:order-2' : ''}>
+        <div className="relative">
+          <ParallaxImage src={image} alt={title} className="aspect-[4/3] rounded-2xl border border-brand-gold/20" />
+          <div className="pointer-events-none absolute inset-0 rounded-2xl bg-gradient-to-tr from-brand-navy/70 via-transparent to-brand-gold/10" />
+          <span className="absolute -top-6 left-6 font-display text-8xl font-bold text-brand-gold/25">{no}</span>
         </div>
+      </Reveal>
 
-        <h3 className="text-xl font-semibold text-white mb-3 group-hover:text-brand-gold transition-colors duration-300">
+      <div className={flip ? 'lg:order-1' : ''}>
+        <Reveal as="h3" className="mb-8 font-display text-3xl font-medium text-white sm:text-4xl">
           {title}
-        </h3>
-
-        <p className="text-white/60 text-sm leading-relaxed">{description}</p>
+        </Reveal>
+        <ul className="space-y-3">
+          {items.map((item, i) => (
+            <motion.li
+              key={item}
+              initial={{ opacity: 0, x: flip ? -24 : 24 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true, margin: '-8% 0px' }}
+              transition={{ duration: 0.8, ease: EASE, delay: i * 0.06 }}
+              className="flex items-start gap-4 border-b border-white/5 pb-3 text-white/75"
+            >
+              <span className="mt-2 h-1.5 w-1.5 flex-shrink-0 rotate-45 bg-brand-gold" />
+              <span className="leading-relaxed">{item}</span>
+            </motion.li>
+          ))}
+        </ul>
       </div>
-
-      <div className="absolute bottom-0 left-0 w-full h-1 bg-gradient-to-r from-brand-gold to-brand-gold-light transform scale-x-0 group-hover:scale-x-100 origin-left transition-transform duration-500" />
     </div>
   );
 }
 
-export function PropertiesSection() {
-  const { t } = useI18n();
-
-  const propertyTypes = [
-    { label: t.properties.buy, icon: '🏢', desc: 'คอนโดมิเนียม บ้านเดี่ยว ทาวน์โฮม ที่ดิน' },
-    { label: t.properties.rent, icon: '🏠', desc: 'ห้องเช่า สำนักงาน ร้านค้า คลังสินค้า' },
-    { label: t.properties.sell, icon: '📋', desc: 'ฝากขายทรัพย์สิน ประเมินราคาตลาด' },
-    { label: t.properties.agent, icon: '🤝', desc: 'สมัครเป็นตัวแทนขายกับเรา' },
-  ];
+export function ServicesSection() {
+  const { t, locale } = useI18n();
+  const c = SERVICES_TEXT[locale];
 
   return (
-    <section id="properties" className="relative py-32 bg-brand-navy overflow-hidden">
-      <div className="absolute inset-0 bg-gradient-to-br from-brand-gold/5 via-transparent to-brand-gold/5" />
-
+    <section id="services" className="relative overflow-hidden bg-brand-navy-light/50 py-32">
+      <div className="pointer-events-none absolute -right-40 top-40 hidden md:block h-[32rem] w-[32rem] rounded-full bg-brand-gold/[0.06] blur-[120px]" />
       <div className="section-container relative">
-        <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-8 mb-16">
-          <div>
-            <span className="section-subtitle">{t.properties.subtitle}</span>
-            <h2 className="section-title text-white">{t.properties.title}</h2>
-          </div>
-          <a
-            href="https://www.peakidea.net/public/thevaluation/%e0%b8%95%e0%b9%89%e0%b8%ad%e0%b8%87%e0%b8%81%e0%b8%b2%e0%b8%a3-%e0%b8%8b%e0%b8%b7%e0%b9%89%e0%b8%ad-%e0%b8%82%e0%b8%b2%e0%b8%a2-%e0%b9%80%e0%b8%8a%e0%b9%88%e0%b8%b2/"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="btn-secondary whitespace-nowrap"
-          >
-            ดูทรัพย์สินทั้งหมด
-          </a>
+        <div className="mx-auto mb-20 max-w-3xl text-center">
+          <Chapter no="02" label={t.nav.services} center />
+          <MaskedTitle lines={[t.services.title]} center className="mb-8" />
+          <Reveal delay={0.2}>
+            <p className="text-lg leading-relaxed text-white/65">{c.intro}</p>
+          </Reveal>
         </div>
 
-        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          {propertyTypes.map((prop, i) => (
-            <a
-              key={i}
-              href="#properties"
-              className="group relative glass-panel p-8 overflow-hidden hover:border-brand-gold/50 transition-all duration-500 hover:-translate-y-2"
-            >
-              <div className="absolute top-0 left-0 w-full h-1 bg-brand-gold scale-x-0 group-hover:scale-x-100 origin-left transition-transform duration-500" />
-              <div className="text-4xl mb-6 group-hover:scale-125 transition-transform duration-500 inline-block">
-                {prop.icon}
-              </div>
-              <h3 className="text-xl font-semibold text-white mb-3 group-hover:text-brand-gold transition-colors">
-                {prop.label}
-              </h3>
-              <p className="text-white/60 text-sm">{prop.desc}</p>
-            </a>
+        {/* The eight lines of work */}
+        <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+          {t.services.items.map((item, i) => (
+            <Reveal key={i} delay={(i % 4) * 0.08} y={50}>
+              <TiltCard className="group overflow-hidden rounded-xl border border-white/10 bg-brand-navy/60 p-7 md:backdrop-blur-sm">
+                <span className="absolute right-5 top-4 font-display text-4xl font-bold text-white/[0.06] transition-colors duration-500 group-hover:text-brand-gold/25">
+                  {String(i + 1).padStart(2, '0')}
+                </span>
+                <div
+                  className="mb-6 flex h-14 w-14 items-center justify-center rounded-xl border border-brand-gold/20 bg-brand-gold/10 text-brand-gold transition-all duration-500 group-hover:bg-brand-gold group-hover:text-brand-navy"
+                  style={{ transform: 'translateZ(30px)' }}
+                >
+                  {serviceIcons[item.icon]}
+                </div>
+                <h3
+                  className="text-lg font-semibold leading-snug text-white transition-colors duration-300 group-hover:text-brand-gold"
+                  style={{ transform: 'translateZ(20px)' }}
+                >
+                  {item.title}
+                </h3>
+                <span className="absolute bottom-0 left-0 h-[3px] w-full origin-left scale-x-0 bg-gradient-to-r from-brand-gold to-brand-gold-light transition-transform duration-500 group-hover:scale-x-100" />
+              </TiltCard>
+            </Reveal>
           ))}
         </div>
 
-        <div className="mt-16 grid grid-cols-2 md:grid-cols-4 gap-4">
-          {[
-            { value: 'คอนโด' },
-            { value: 'บ้าน' },
-            { value: 'ที่ดิน' },
-            { value: 'พาณิชย์' },
-          ].map((tag, i) => (
-            <div key={i} className="text-center py-4 px-2 rounded-lg bg-white/5 border border-white/10">
-              <span className="text-brand-gold text-sm font-medium">{tag.value}</span>
-            </div>
-          ))}
+        {/* Full lists */}
+        <div className="mt-36 space-y-36">
+          <ListPanel no="01" title={c.scopeTitle} items={c.scope} image={`${IMG}/workers-of-real-estate-agency-PNLKS22.jpg`} />
+          <ListPanel no="02" title={c.objectivesTitle} items={c.objectives} image={`${IMG}/stock.jpg`} flip />
+          <ListPanel no="03" title={c.typesTitle} items={c.types} image={`${IMG}/city.jpg`} />
         </div>
       </div>
     </section>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/* Buy / Sell / Rent                                                   */
+/* ------------------------------------------------------------------ */
+
+export function PropertiesSection() {
+  const { t } = useI18n();
+
+  const tiles: Array<{ label: string; icon: string; mode?: 'buy' | 'sell' | 'rent' }> = [
+    { label: t.properties.buy, icon: '🏢', mode: 'buy' },
+    { label: t.properties.rent, icon: '🏠', mode: 'rent' },
+    { label: t.properties.sell, icon: '📋', mode: 'sell' },
+    { label: t.properties.agent, icon: '🤝' },
+  ];
+
+  const pick = (mode?: 'buy' | 'sell' | 'rent') => {
+    if (!mode) {
+      document.getElementById('contact')?.scrollIntoView({ behavior: 'smooth' });
+      return;
+    }
+    window.dispatchEvent(new CustomEvent('inquiry-mode', { detail: mode }));
+    document.getElementById('inquiry')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
+
+  return (
+    <section id="properties" className="relative overflow-hidden bg-brand-navy py-32">
+      <div className="absolute inset-0 bg-gradient-to-br from-brand-gold/5 via-transparent to-brand-gold/5" />
+      <div className="section-container relative">
+        <div className="mx-auto mb-16 max-w-3xl text-center">
+          <Chapter no="03" label={t.nav.properties} center />
+          <MaskedTitle lines={[t.properties.title]} center />
+        </div>
+
+        <div className="mb-20 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+          {tiles.map((tile, i) => (
+            <Reveal key={i} delay={i * 0.08}>
+              <TiltCard className="rounded-xl border border-white/10 bg-white/[0.04]">
+                <button
+                  type="button"
+                  onClick={() => pick(tile.mode)}
+                  className="group block w-full rounded-xl p-8 text-left"
+                >
+                  <div className="mb-6 inline-block text-4xl transition-transform duration-500 group-hover:scale-125 group-hover:-rotate-6">
+                    {tile.icon}
+                  </div>
+                  <h3 className="text-xl font-semibold text-white transition-colors group-hover:text-brand-gold">
+                    {tile.label}
+                  </h3>
+                </button>
+              </TiltCard>
+            </Reveal>
+          ))}
+        </div>
+
+        <Reveal y={60}>
+          <div id="inquiry" className="scroll-mt-28">
+            <PropertyInquiry />
+          </div>
+        </Reveal>
+      </div>
+    </section>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/* Branches                                                            */
+/* ------------------------------------------------------------------ */
+
+type Branch = {
+  name: string;
+  address: string;
+  phones: string;
+  mobile?: string;
+  email: string;
+  map?: string;
+};
+
+function MapModal({ src, title, onClose }: { src: string; title: string; onClose: () => void }) {
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && onClose();
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [onClose]);
+
+  return (
+    <motion.div
+      className="fixed inset-0 z-[70] flex items-center justify-center bg-black/80 p-4 backdrop-blur-md"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      onClick={onClose}
+      role="dialog"
+      aria-modal="true"
+      aria-label={title}
+    >
+      <motion.div
+        className="relative max-h-[90vh] max-w-4xl overflow-auto rounded-xl bg-white p-2"
+        initial={{ scale: 0.88, y: 40, rotateX: 12 }}
+        animate={{ scale: 1, y: 0, rotateX: 0 }}
+        exit={{ scale: 0.92, y: 20, opacity: 0 }}
+        transition={{ duration: 0.5, ease: EASE }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src={src} alt={title} className="h-auto w-full" />
+        <button
+          type="button"
+          onClick={onClose}
+          aria-label="Close"
+          className="absolute right-3 top-3 flex h-9 w-9 items-center justify-center rounded-full bg-brand-navy text-white transition-colors hover:bg-brand-gold hover:text-brand-navy"
+        >
+          ✕
+        </button>
+      </motion.div>
+    </motion.div>
   );
 }
 
 export function BranchesSection() {
   const { t, locale } = useI18n();
+  const th = locale === 'th';
+  const [openMap, setOpenMap] = useState<{ src: string; title: string } | null>(null);
 
-  const branches = [
-    { city: 'กรุงเทพฯ', name: 'สำนักงานใหญ่', address: '719 เคพีเอ็น ทาวเวอร์ ชั้น 12 ถนนพระราม 9', phone: '0-2717-0801-8' },
-    { city: 'ชลบุรี', name: 'สาขาชลบุรี', address: 'ถนนสุขุมวิท อำเภอเมืองชลบุรี', phone: '0-3812-3456' },
-    { city: 'เชียงใหม่', name: 'สาขาเชียงใหม่', address: 'ถนนนิมมานเหมินทร์ อำเภอเมืองเชียงใหม่', phone: '0-5321-7890' },
-    { city: 'ขอนแก่น', name: 'สาขาขอนแก่น', address: 'ถนนศรีจันทร์ อำเภอเมืองขอนแก่น', phone: '0-4322-4567' },
-    { city: 'ภูเก็ต', name: 'สาขาภูเก็ต', address: 'ถนนเยาวราช อำเภอเมืองภูเก็ต', phone: '0-7621-8901' },
-    { city: 'หาดใหญ่', name: 'สาขาหาดใหญ่', address: 'ถนนเพชรเกษม อำเภอหาดใหญ่', phone: '0-7412-3456' },
+  // Head office and branch details as published on thevaluation.com (contact page + branch page).
+  const branches: Branch[] = [
+    {
+      name: th ? 'สำนักงานใหญ่ กรุงเทพฯ' : 'Head Office, Bangkok',
+      address: th
+        ? '719 เคพีเอ็น ทาวเวอร์ ชั้น 12 ถนนพระราม 9 แขวงบางกะปิ เขตห้วยขวาง กรุงเทพฯ 10310'
+        : '719 KPN Tower, 12th Floor, Rama 9 Rd, Huaykwang, Bangkok 10310',
+      phones: '0-2717-0801-8',
+      mobile: '081-512-9411, 084-692-8851',
+      email: 'info@thevaluation.com',
+      map: `${IMG}/office-map.jpg`,
+    },
+    {
+      name: th ? 'สาขาเชียงใหม่' : 'Chiang Mai Branch',
+      address: th
+        ? 'เลขที่ 29/13 หมู่ที่ 6 ถ.สมโภชเชียงใหม่ 700 ปี ต.สันทรายน้อย อ.สันทราย จ.เชียงใหม่ 50210'
+        : 'No. 29/13 Moo 6, Somphot Chiang Mai 700 Years Road, Sansai Noi, Sansai, Chiang Mai 50210',
+      phones: '053-380777, 053-380861',
+      email: 'chiangmai@thevaluation.com',
+      map: `${IMG}/chiangmai.jpg`,
+    },
+    {
+      name: th ? 'สาขานครราชสีมา' : 'Nakhon Ratchasima Branch',
+      address: th
+        ? 'เลขที่ 443/2 ถ.ยมราช ต.ในเมือง อ.เมือง จ.นครราชสีมา 30000'
+        : '443/2 Yommarat Road, Nai Mueang, Mueang, Nakhon Ratchasima 30000',
+      phones: '044-244088',
+      mobile: '086-815-7226',
+      email: 'korat@thevaluation.com',
+      map: `${IMG}/korat.jpg`,
+    },
+    {
+      name: th ? 'สาขาอุดรธานี' : 'Udon Thani Branch',
+      address: th
+        ? 'เลขที่ 99/97 หมู่บ้านสวนพฤกษา 2 ถ.รอบเมือง ต.หมากแข้ง อ.เมือง จ.อุดรธานี 41000'
+        : 'No. 99/97 Baan Suan Pruksa 2, Rob Mueang Road, Mak Khaeng, Mueang, Udon Thani 41000',
+      phones: '042-113468',
+      mobile: '089-418-0034',
+      email: 'udon@thevaluation.com',
+      map: `${IMG}/udon.jpg`,
+    },
+    {
+      name: th ? 'สาขาสกลนคร' : 'Sakon Nakhon Branch',
+      address: th
+        ? 'เลขที่ 387/160 หมู่บ้านสกลรุ่งเรือง ถ.ไอ ที ยู ต.ธาตุเชิงชุม อ.เมือง จ.สกลนคร 47000'
+        : 'No. 387/160 Sakon Roong Rueng, ITU Road, Tart Choeng Mum, Mueang, Sakon Nakhon 47000',
+      phones: '042-716569',
+      mobile: '089-711-5015',
+      email: 'sakonnakhon@thevaluation.com',
+      map: `${IMG}/sakon.jpg`,
+    },
+    {
+      name: th ? 'สาขาบุรีรัมย์' : 'Buriram Branch',
+      address: th
+        ? 'เลขที่ 8/19 ถ.ปลัดเมือง ต.ในเมือง อ.เมือง จ.บุรีรัมย์ 31000'
+        : 'No. 8/19 Pladmuang Road, Nai Mueang, Mueang, Buriram 31000',
+      phones: '044-620074',
+      mobile: '089-478-9331',
+      email: 'buriram@thevaluation.com',
+    },
+    {
+      name: th ? 'สาขาชัยภูมิ' : 'Chaiyaphum Branch',
+      address: th
+        ? 'เลขที่ 522/4ก ถ.บรรณาการ ต.ในเมือง อ.เมือง จ.ชัยภูมิ 36000'
+        : 'No. 522/4 Kor Bannakan Rd, Nai Mueang, Mueang, Chaiyaphum 36000',
+      phones: '094-241-2587',
+      email: 'chaiyaphum@thevaluation.com',
+    },
   ];
 
   return (
-    <section id="branches" className="relative py-32 bg-brand-navy-light/50">
+    <section id="branches" className="relative overflow-hidden bg-brand-navy-light/50 py-32">
       <div className="section-container">
-        <div className="text-center max-w-3xl mx-auto mb-16">
-          <span className="section-subtitle">{t.branches.subtitle}</span>
-          <h2 className="section-title text-white">{t.branches.title}</h2>
+        <div className="mx-auto mb-16 max-w-3xl text-center">
+          <Chapter no="04" label={t.nav.branches} center />
+          <MaskedTitle lines={[t.branches.title]} center className="mb-4" />
+          <Reveal delay={0.2}>
+            <p className="text-white/55">{t.branches.subtitle}</p>
+          </Reveal>
         </div>
 
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {branches.map((branch, i) => (
-            <div key={i} className="card-3d group relative overflow-hidden">
-              <div className="absolute top-0 left-0 w-full h-16 bg-gradient-to-r from-brand-gold/10 to-transparent" />
-              <div className="flex items-start justify-between mb-4">
-                <div>
-                  <h3 className="text-xl font-semibold text-white group-hover:text-brand-gold transition-colors">
-                    {branch.name}
-                  </h3>
-                  <p className="text-brand-gold text-sm mt-1">{branch.city}</p>
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          {branches.map((b, i) => (
+            <motion.div
+              key={b.name}
+              initial={{ opacity: 0, y: 60, rotateX: -22 }}
+              whileInView={{ opacity: 1, y: 0, rotateX: 0 }}
+              viewport={{ once: true, margin: '-8% 0px' }}
+              transition={{ duration: 1, ease: EASE, delay: (i % 3) * 0.1 }}
+              style={{ transformPerspective: 1000 }}
+            >
+              <TiltCard className="group overflow-hidden rounded-xl border border-white/10 bg-brand-navy/60 p-7 md:backdrop-blur-sm" max={6}>
+                <div className="absolute left-0 top-0 h-16 w-full bg-gradient-to-r from-brand-gold/10 to-transparent" />
+                <div className="relative mb-4 flex items-start justify-between gap-4">
+                  <h3 className="text-xl font-semibold text-white transition-colors group-hover:text-brand-gold">{b.name}</h3>
+                  <span className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full border border-brand-gold/30 text-xs font-bold text-brand-gold">
+                    {String(i + 1).padStart(2, '0')}
+                  </span>
                 </div>
-                <div className="w-10 h-10 rounded-full border border-brand-gold/30 flex items-center justify-center text-brand-gold text-xs font-bold">
-                  {String(i + 1).padStart(2, '0')}
+                <p className="relative mb-5 text-sm leading-relaxed text-white/60">{b.address}</p>
+                <div className="relative space-y-1 text-sm">
+                  <div className="text-brand-gold">☎ {b.phones}</div>
+                  {b.mobile && (
+                    <div className="pl-5 text-white/60">
+                      {th ? 'มือถือ' : 'Mobile'} {b.mobile}
+                    </div>
+                  )}
+                  <a href={`mailto:${b.email}`} className="block py-1.5 pl-5 text-white/60 transition-colors hover:text-brand-gold">
+                    {b.email}
+                  </a>
                 </div>
-              </div>
-              <p className="text-white/60 text-sm mb-4">{branch.address}</p>
-              <div className="flex items-center gap-2 text-brand-gold text-sm">
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
-                </svg>
-                {branch.phone}
-              </div>
-            </div>
+                {b.map && (
+                  <button
+                    type="button"
+                    onClick={() => setOpenMap({ src: b.map!, title: b.name })}
+                    className="relative mt-5 rounded-full border border-brand-gold/40 px-5 py-2.5 text-xs font-semibold uppercase tracking-wider text-brand-gold transition-all duration-300 hover:bg-brand-gold hover:text-brand-navy"
+                  >
+                    {th ? 'ดูแผนที่' : 'View map'}
+                  </button>
+                )}
+              </TiltCard>
+            </motion.div>
           ))}
         </div>
       </div>
+
+      <AnimatePresence>
+        {openMap && <MapModal src={openMap.src} title={openMap.title} onClose={() => setOpenMap(null)} />}
+      </AnimatePresence>
     </section>
   );
 }
 
-export function CareersSection() {
-  const { t } = useI18n();
+/* ------------------------------------------------------------------ */
+/* Careers                                                             */
+/* ------------------------------------------------------------------ */
 
+export function CareersSection() {
+  const { t, locale } = useI18n();
+  const th = locale === 'th';
+
+  // Open positions from the live "ร่วมงานกับเรา" page; all based at the Bangkok head office.
   const positions = [
-    { title: 'ผู้ประเมินมูลค่าทรัพย์สิน', type: 'Full-time', location: 'กรุงเทพฯ' },
-    { title: 'นักวิเคราะห์การเงิน', type: 'Full-time', location: 'กรุงเทพฯ' },
-    { title: 'วิศวกรสำรวจอาคาร', type: 'Full-time', location: 'ทั่วประเทศ' },
-    { title: 'เจ้าหน้าที่การตลาด', type: 'Full-time', location: 'กรุงเทพฯ' },
+    { title: th ? 'เจ้าหน้าที่ประเมินมูลค่าทรัพย์สิน - อสังหาริมทรัพย์' : 'Property Valuation Officer (Real Estate)', openings: 3 },
+    { title: th ? 'เจ้าหน้าที่ประเมินราคาทรัพย์สิน - วิธีรายได้' : 'Property Valuation Officer (Income Approach)', openings: 2 },
+    { title: th ? 'เจ้าหน้าที่ประเมินมูลค่าทรัพย์สิน - เครื่องจักร' : 'Property Valuation Officer (Machinery)', openings: 3 },
+    { title: th ? 'เจ้าหน้าที่ฝ่ายการตลาด' : 'Marketing Officer', openings: 3 },
+    { title: th ? 'เจ้าหน้าที่ฝ่ายพิมพ์' : 'Typist', openings: 5 },
   ];
 
   return (
-    <section id="careers" className="relative py-32 bg-brand-navy overflow-hidden">
-      <div className="absolute inset-0 opacity-5">
-        <div className="absolute inset-0 animate-grid" style={{
-          backgroundImage: `linear-gradient(rgba(200,169,81,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(200,169,81,0.1) 1px, transparent 1px)`,
-          backgroundSize: '50px 50px',
-        }} />
-      </div>
-
+    <section id="careers" className="relative overflow-hidden bg-brand-navy py-32">
       <div className="section-container relative">
-        <div className="grid lg:grid-cols-2 gap-16 items-center">
+        <div className="grid items-start gap-16 lg:grid-cols-2">
           <div>
-            <span className="section-subtitle">{t.careers.subtitle}</span>
-            <h2 className="section-title text-white mb-8">{t.careers.title}</h2>
-            <p className="text-white/70 text-lg leading-relaxed mb-10">
-              ร่วมสร้างทีมงานที่เติบโตไปกับองค์กรชั้นนำของประเทศ เราพร้อมสนับสนุนพัฒนาทักษะและความก้าวหน้าในสายอาชีพ
-            </p>
+            <Chapter no="05" label={t.nav.careers} />
+            <MaskedTitle lines={[t.careers.title]} className="mb-3" />
+            <Reveal delay={0.15}>
+              <p className="mb-10 text-white/55">{t.careers.subtitle}</p>
+            </Reveal>
 
             <div className="space-y-4">
               {positions.map((pos, i) => (
-                <div key={i} className="glass-panel p-5 flex items-center justify-between hover:border-brand-gold/40 transition-all duration-300 group">
-                  <div>
-                    <h4 className="text-white font-medium group-hover:text-brand-gold transition-colors">{pos.title}</h4>
-                    <p className="text-white/50 text-sm mt-1">{pos.type} • {pos.location}</p>
+                <Reveal key={i} delay={i * 0.07} x={-30} y={0}>
+                  <div className="group flex items-center justify-between gap-4 rounded-xl border border-white/10 bg-white/[0.04] p-5 md:backdrop-blur-md transition-all duration-500 hover:-translate-y-1 hover:border-brand-gold/40 hover:bg-white/[0.07]">
+                    <div>
+                      <h4 className="font-medium text-white transition-colors group-hover:text-brand-gold">{pos.title}</h4>
+                      <p className="mt-1 text-sm text-white/50">
+                        {th ? `รับสมัคร ${pos.openings} อัตรา` : `${pos.openings} positions`} • {th ? 'กรุงเทพฯ' : 'Bangkok'}
+                      </p>
+                    </div>
+                    <a
+                      href={`mailto:job@thevaluation.com?subject=${encodeURIComponent(pos.title)}`}
+                      className="flex-shrink-0 rounded-full border border-brand-gold/40 px-4 py-2 text-sm text-brand-gold transition-all duration-300 hover:bg-brand-gold hover:text-brand-navy"
+                    >
+                      {t.careers.apply}
+                    </a>
                   </div>
-                  <a
-                    href="mailto:info@thevaluation.com?subject=สมัครงาน"
-                    className="px-4 py-2 border border-brand-gold/40 text-brand-gold text-sm rounded-full hover:bg-brand-gold hover:text-brand-navy transition-all duration-300"
-                  >
-                    {t.careers.apply}
-                  </a>
-                </div>
+                </Reveal>
               ))}
             </div>
           </div>
 
-          <div className="relative">
-            <div className="glass-panel p-8 backdrop-blur-xl">
-              <h3 className="text-2xl font-display text-white mb-6">ทำไมต้องเรา?</h3>
-              <ul className="space-y-4">
-                {[
-                  'เงินเดือนและสวัสดิการที่แข่งขันได้',
-                  'โอกาสเติบโตในสายอาชีพ',
-                  'อบรมและพัฒนาทักษะอย่างต่อเนื่อง',
-                  'วัฒนธรรมองค์กรที่โปร่งใส',
-                  'โบนัสตามผลงาน',
-                ].map((item, i) => (
-                  <li key={i} className="flex items-start gap-3">
-                    <div className="w-6 h-6 rounded-full bg-brand-gold/20 flex items-center justify-center flex-shrink-0 mt-0.5">
-                      <svg className="w-3.5 h-3.5 text-brand-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                      </svg>
-                    </div>
-                    <span className="text-white/80">{item}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </div>
+          <Reveal x={50} y={0} className="lg:sticky lg:top-28">
+            <TiltCard className="rounded-2xl border border-white/10 bg-white/[0.04] p-8 md:backdrop-blur-xl" max={4}>
+              <h3 className="mb-6 font-display text-2xl text-white">{th ? 'วิธีการรับสมัครงาน' : 'How to apply'}</h3>
+              <div className="space-y-4 text-sm leading-relaxed text-white/70">
+                <p>
+                  {th ? 'ส่งอีเมลมาที่ ' : 'Send an email to '}
+                  <a href="mailto:job@thevaluation.com" className="text-brand-gold transition-colors hover:text-brand-gold-light">
+                    job@thevaluation.com
+                  </a>
+                  {th ? ' หรือส่งจดหมายสมัครงาน' : ' or send a cover letter.'}
+                </p>
+                <p>
+                  <span className="font-medium text-white">The Valuation & Consultants Co., Ltd.</span>
+                  <br />
+                  {th
+                    ? '719 เคพีเอ็น ทาวเวอร์ ชั้น 12 ถนนพระราม 9 แขวงบางกะปิ เขตห้วยขวาง กรุงเทพฯ 10310'
+                    : '719 KPN Tower, 12th Floor, Rama 9 Road, Bangkapi, Huaykwang, Bangkok 10310'}
+                  <br />
+                  {th ? 'โทร.' : 'Tel.'} 0-2717-080-8 · {th ? 'โทรสาร' : 'Fax'} 0-2717-080-0
+                </p>
+                <a
+                  href="https://www.thevaluation.com/wp-content/uploads/2021/05/ใบสมัครVC-64.v2.pdf"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="btn-secondary inline-block"
+                >
+                  {th ? 'ดาวน์โหลดใบสมัคร' : 'Download application form'}
+                </a>
+              </div>
+            </TiltCard>
+          </Reveal>
         </div>
       </div>
     </section>
   );
 }
+
+/* ------------------------------------------------------------------ */
+/* Articles                                                            */
+/* ------------------------------------------------------------------ */
 
 export function ArticlesSection() {
-  const { t } = useI18n();
-
-  const articles = [
-    {
-      title: 'แนวโน้มตลาดอสังหาริมทรัพย์ไทย 2569',
-      date: '12 ต.ค. 2569',
-      category: 'ตลาด',
-      readTime: '5 นาที',
-    },
-    {
-      title: 'การประเมินมูลค่าทรัพย์สินเพื่อการกู้ยืม',
-      date: '8 ต.ค. 2569',
-      category: 'การเงิน',
-      readTime: '8 นาที',
-    },
-    {
-      title: 'มาตรฐานการประเมินมูลค่าสากล IVS',
-      date: '3 ต.ค. 2569',
-      category: 'มาตรฐาน',
-      readTime: '6 นาที',
-    },
-  ];
+  const { t, locale } = useI18n();
+  const url =
+    'https://www.thevaluation.com/%e0%b8%9a%e0%b8%97%e0%b8%84%e0%b8%a7%e0%b8%b2%e0%b8%a1%e0%b8%a7%e0%b8%b4%e0%b8%88%e0%b8%b1%e0%b8%a2/';
 
   return (
-    <section id="articles" className="relative py-32 bg-brand-navy-light/50">
+    <section id="articles" className="relative overflow-hidden bg-brand-navy-light/50 py-32">
       <div className="section-container">
-        <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-8 mb-16">
-          <div>
-            <span className="section-subtitle">{t.articles.subtitle}</span>
-            <h2 className="section-title text-white">{t.articles.title}</h2>
-          </div>
-          <a
-            href="https://www.thevaluation.com/%e0%b8%9a%e0%b8%97%e0%b8%84%e0%b8%a7%e0%b8%b2%e0%b8%a1%e0%b8%a7%e0%b8%b4%e0%b8%88%e0%b8%b1%e0%b8%a2/"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="btn-secondary whitespace-nowrap"
-          >
-            {t.articles.readMore}
-          </a>
-        </div>
-
-        <div className="grid md:grid-cols-3 gap-6">
-          {articles.map((article, i) => (
-            <a
-              key={i}
-              href="https://www.thevaluation.com/%e0%b8%9a%e0%b8%97%e0%b8%84%e0%b8%a7%e0%b8%b2%e0%b8%a1%e0%b8%a7%e0%b8%b4%e0%b8%88%e0%b8%b1%e0%b8%a2/"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="card-3d group"
-            >
-              <div className="flex items-center gap-3 mb-4">
-                <span className="px-3 py-1 rounded-full bg-brand-gold/20 text-brand-gold text-xs font-medium">
-                  {article.category}
-                </span>
-                <span className="text-white/40 text-xs">{article.date}</span>
-              </div>
-              <h3 className="text-xl font-semibold text-white mb-4 group-hover:text-brand-gold transition-colors">
-                {article.title}
-              </h3>
-              <div className="flex items-center justify-between">
-                <span className="text-white/40 text-sm">{article.readTime}</span>
-                <span className="text-brand-gold text-sm flex items-center gap-1 group-hover:gap-2 transition-all">
-                  {t.articles.readMore}
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
-                  </svg>
-                </span>
-              </div>
+        <div className="mx-auto max-w-3xl text-center">
+          <Chapter no="06" label={t.nav.articles} center />
+          <MaskedTitle lines={[t.articles.title]} center className="mb-4" />
+          <Reveal delay={0.15}>
+            <p className="mb-10 text-white/55">{t.articles.subtitle}</p>
+          </Reveal>
+          <Reveal delay={0.25}>
+            <a href={url} target="_blank" rel="noopener noreferrer" className="btn-secondary inline-block">
+              {t.articles.readMore}
             </a>
-          ))}
+            <p className="mt-6 text-xs text-white/40">{locale === 'th' ? 'เปิดที่ thevaluation.com' : 'Opens thevaluation.com'}</p>
+          </Reveal>
         </div>
       </div>
     </section>
   );
 }
 
+/* ------------------------------------------------------------------ */
+/* Call to action                                                      */
+/* ------------------------------------------------------------------ */
+
 export function CTASection() {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
 
   return (
-    <section className="relative py-32 bg-gradient-to-r from-brand-gold via-brand-gold-light to-brand-gold overflow-hidden">
-      <div className="absolute inset-0 opacity-10">
-        <div className="absolute inset-0 animate-grid" style={{
-          backgroundImage: `linear-gradient(rgba(11,20,38,0.2) 1px, transparent 1px), linear-gradient(90deg, rgba(11,20,38,0.2) 1px, transparent 1px)`,
-          backgroundSize: '40px 40px',
-        }} />
-      </div>
-
+    <section className="relative overflow-hidden bg-gradient-to-r from-brand-gold via-brand-gold-light to-brand-gold py-32">
+      <motion.div
+        className="pointer-events-none absolute inset-y-0 -left-1/3 hidden w-1/3 skew-x-[-20deg] bg-white/30 blur-2xl md:block"
+        animate={{ x: ['0%', '420%'] }}
+        transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut', repeatDelay: 2 }}
+      />
       <div className="section-container relative text-center">
-        <h2 className="text-4xl sm:text-5xl lg:text-6xl font-display font-bold text-brand-navy mb-6">
-          ประสบการณ์ ในการประเมินมูลค่าทรัพย์สินมากกว่า 30 ปี
-        </h2>
-        <p className="text-xl text-brand-navy/80 mb-10 max-w-2xl mx-auto">
-          บริการทั้งในระดับชาติและระดับสากล ติดต่อเราวันนี้เพื่อรับคำปรึกษาฟรี
-        </p>
-        <div className="flex flex-wrap justify-center gap-4">
+        <MaskedTitle
+          center
+          className="mb-6 !font-display !font-bold !text-brand-navy"
+          lines={[locale === 'th' ? 'ประเมินมูลค่าทรัพย์สิน ตั้งแต่ พ.ศ. 2535' : 'Property valuation since 1992']}
+        />
+        <Reveal delay={0.2}>
+          <p className="mx-auto mb-10 max-w-2xl text-xl text-brand-navy/80">
+            {locale === 'th' ? 'บริการทั้งในระดับชาติและระดับสากล' : 'Serving clients at national and international level'}
+          </p>
+        </Reveal>
+        <Reveal delay={0.3} className="flex flex-wrap justify-center gap-4">
           <a
             href="tel:027170801"
-            className="px-10 py-4 bg-brand-navy text-white font-semibold rounded-full hover:bg-brand-dark transition-all duration-300 hover:shadow-[0_10px_40px_rgba(11,20,38,0.4)]"
+            className="rounded-full bg-brand-navy px-10 py-4 font-semibold text-white transition-all duration-300 hover:-translate-y-1 hover:bg-brand-dark hover:shadow-[0_10px_40px_rgba(11,20,38,0.4)]"
           >
             {t.contact.title}
           </a>
           <a
             href="mailto:info@thevaluation.com"
-            className="px-10 py-4 border-2 border-brand-navy text-brand-navy font-semibold rounded-full hover:bg-brand-navy hover:text-white transition-all duration-300"
+            className="rounded-full border-2 border-brand-navy px-10 py-4 font-semibold text-brand-navy transition-all duration-300 hover:-translate-y-1 hover:bg-brand-navy hover:text-white"
           >
             info@thevaluation.com
           </a>
-        </div>
+        </Reveal>
       </div>
     </section>
   );
 }
 
+/* ------------------------------------------------------------------ */
+/* Contact                                                             */
+/* ------------------------------------------------------------------ */
+
+const fieldCls =
+  'w-full rounded-lg border border-white/10 bg-white/[0.04] px-4 py-3 text-sm text-white placeholder-white/35 outline-none transition-all duration-300 focus:border-brand-gold focus:bg-white/[0.08] focus:shadow-[0_0_0_4px_rgba(200,169,81,0.12)]';
+
 export function ContactSection() {
-  const { t } = useI18n();
-  const [formState, setFormState] = React.useState({ name: '', email: '', phone: '', message: '' });
-  const [submitted, setSubmitted] = React.useState(false);
+  const { t, locale } = useI18n();
+  const th = locale === 'th';
+  const [form, setForm] = useState({ name: '', email: '', phone: '', message: '' });
+  const [submitted, setSubmitted] = useState(false);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const subject = encodeURIComponent(`Website inquiry from ${formState.name}`);
+    const subject = encodeURIComponent(`Website inquiry from ${form.name}`);
     const body = encodeURIComponent(
-      [
-        `Name: ${formState.name}`,
-        `Email: ${formState.email}`,
-        `Phone: ${formState.phone || '-'}`,
-        '',
-        formState.message,
-      ].join('\n')
+      [`Name: ${form.name}`, `Email: ${form.email}`, `Phone: ${form.phone || '-'}`, '', form.message].join('\n')
     );
-
     setSubmitted(true);
     window.location.href = `mailto:info@thevaluation.com?subject=${subject}&body=${body}`;
     setTimeout(() => setSubmitted(false), 3000);
   };
 
-  return (
-    <section id="contact" className="relative py-32 bg-brand-navy overflow-hidden">
-      <div className="absolute inset-0 opacity-5">
-        <div className="absolute inset-0 animate-grid" style={{
-          backgroundImage: `linear-gradient(rgba(200,169,81,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(200,169,81,0.1) 1px, transparent 1px)`,
-          backgroundSize: '50px 50px',
-        }} />
-      </div>
+  const rows: Array<{ label: string; lines: React.ReactNode[] }> = [
+    {
+      label: t.contact.address,
+      lines: [
+        th
+          ? '719 เคพีเอ็น ทาวเวอร์ ชั้น 12 ถนนพระราม 9 แขวงบางกะปิ เขตห้วยขวาง กรุงเทพฯ 10310'
+          : '719 KPN Tower, 12th Floor, Rama 9 Rd, Huaykwang, Bangkok 10310',
+      ],
+    },
+    { label: t.contact.phoneLabel, lines: ['0-2717-0801-8', `${th ? 'มือถือ' : 'Mobile'} 081-512-9411, 084-692-8851`, `${th ? 'โทรสาร' : 'Fax'} 0-2717-0800`] },
+    {
+      label: t.contact.emailLabel,
+      lines: [
+        <a key="m" href="mailto:info@thevaluation.com" className="text-brand-gold transition-colors hover:text-brand-gold-light">
+          info@thevaluation.com
+        </a>,
+      ],
+    },
+  ];
 
+  return (
+    <section id="contact" className="relative overflow-hidden bg-brand-navy py-32">
       <div className="section-container relative">
-        <div className="text-center max-w-3xl mx-auto mb-16">
-          <span className="section-subtitle">{t.contact.subtitle}</span>
-          <h2 className="section-title text-white">{t.contact.title}</h2>
+        <div className="mx-auto mb-16 max-w-3xl text-center">
+          <Chapter no="07" label={t.nav.contact} center />
+          <MaskedTitle lines={[t.contact.title]} center />
         </div>
 
-        <div className="grid lg:grid-cols-2 gap-12 max-w-6xl mx-auto">
-          <div className="space-y-8">
-            <div className="card-3d">
-              <div className="flex items-start gap-4">
-                <div className="w-12 h-12 rounded-xl bg-brand-gold/20 flex items-center justify-center text-brand-gold flex-shrink-0">
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                  </svg>
-                </div>
-                <div>
-                  <h4 className="text-white font-semibold mb-2">{t.contact.address}</h4>
-                  <p className="text-white/60 text-sm leading-relaxed">
-                    719 เคพีเอ็น ทาวเวอร์ ชั้น 12 ถนนพระราม 9 แขวงบางกะปิ เขตห้วยขวาง กรุงเทพฯ 10310
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            <div className="card-3d">
-              <div className="flex items-start gap-4">
-                <div className="w-12 h-12 rounded-xl bg-brand-gold/20 flex items-center justify-center text-brand-gold flex-shrink-0">
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
-                  </svg>
-                </div>
-                <div>
-                  <h4 className="text-white font-semibold mb-2">{t.contact.phoneLabel}</h4>
-                  <p className="text-white/60 text-sm">0-2717-0801-8</p>
-                  <p className="text-white/60 text-sm mt-1">มือถือ 081-512-9411, 083-888-4810</p>
-                </div>
-              </div>
-            </div>
-
-            <div className="card-3d">
-              <div className="flex items-start gap-4">
-                <div className="w-12 h-12 rounded-xl bg-brand-gold/20 flex items-center justify-center text-brand-gold flex-shrink-0">
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                  </svg>
-                </div>
-                <div>
-                  <h4 className="text-white font-semibold mb-2">{t.contact.emailLabel}</h4>
-                  <a href="mailto:info@thevaluation.com" className="text-brand-gold text-sm hover:text-brand-gold-light transition-colors">
-                    info@thevaluation.com
-                  </a>
-                </div>
-              </div>
-            </div>
+        <div className="mx-auto grid max-w-6xl gap-12 lg:grid-cols-2">
+          <div className="space-y-5">
+            {rows.map((r, i) => (
+              <Reveal key={r.label} delay={i * 0.08} x={-30} y={0}>
+                <TiltCard className="rounded-xl border border-white/10 bg-white/[0.04] p-6" max={4}>
+                  <h4 className="mb-2 font-semibold text-white">{r.label}</h4>
+                  <div className="space-y-1 text-sm leading-relaxed text-white/60">
+                    {r.lines.map((ln, k) => (
+                      <p key={k}>{ln}</p>
+                    ))}
+                  </div>
+                </TiltCard>
+              </Reveal>
+            ))}
+            <Reveal delay={0.3} x={-30} y={0}>
+              <ParallaxImage src={`${IMG}/office-building.jpg`} alt="KPN Tower" className="aspect-[16/9] rounded-xl border border-white/10" strength={8} />
+            </Reveal>
           </div>
 
-          <form onSubmit={handleSubmit} className="card-3d space-y-6">
-            {submitted && (
-              <div className="p-4 rounded-lg bg-brand-gold/20 border border-brand-gold/40 text-brand-gold text-sm flex items-center gap-2 animate-fade-in">
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                </svg>
-                กำลังเปิดอีเมลเพื่อส่งข้อความถึงเรา
+          <Reveal x={40} y={0}>
+            <form onSubmit={handleSubmit} className="space-y-5 rounded-2xl border border-white/10 bg-white/[0.04] p-7 md:backdrop-blur-xl">
+              <AnimatePresence>
+                {submitted && (
+                  <motion.p
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: 'auto' }}
+                    exit={{ opacity: 0, height: 0 }}
+                    className="overflow-hidden rounded-lg border border-brand-gold/40 bg-brand-gold/10 px-4 py-3 text-sm text-brand-gold"
+                  >
+                    {th ? 'กำลังเปิดอีเมลเพื่อส่งข้อความถึงเรา' : 'Opening your email app to send your message'}
+                  </motion.p>
+                )}
+              </AnimatePresence>
+              <div className="grid gap-5 sm:grid-cols-2">
+                <input className={fieldCls} required placeholder={t.contact.name} aria-label={t.contact.name} value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
+                <input className={fieldCls} required type="email" placeholder={t.contact.email} aria-label={t.contact.email} value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
               </div>
-            )}
-
-            <div className="grid sm:grid-cols-2 gap-6">
-              <div>
-                <label className="block text-white/60 text-sm mb-2">{t.contact.name}</label>
-                <input
-                  type="text"
-                  required
-                  value={formState.name}
-                  onChange={(e) => setFormState({ ...formState, name: e.target.value })}
-                  className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/30 focus:outline-none focus:border-brand-gold focus:bg-white/10 transition-all duration-300"
-                />
-              </div>
-              <div>
-                <label className="block text-white/60 text-sm mb-2">{t.contact.phone}</label>
-                <input
-                  type="tel"
-                  value={formState.phone}
-                  onChange={(e) => setFormState({ ...formState, phone: e.target.value })}
-                  className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/30 focus:outline-none focus:border-brand-gold focus:bg-white/10 transition-all duration-300"
-                />
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-white/60 text-sm mb-2">{t.contact.email}</label>
-              <input
-                type="email"
-                required
-                value={formState.email}
-                onChange={(e) => setFormState({ ...formState, email: e.target.value })}
-                className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/30 focus:outline-none focus:border-brand-gold focus:bg-white/10 transition-all duration-300"
-              />
-            </div>
-
-            <div>
-              <label className="block text-white/60 text-sm mb-2">{t.contact.message}</label>
-              <textarea
-                rows={5}
-                required
-                value={formState.message}
-                onChange={(e) => setFormState({ ...formState, message: e.target.value })}
-                className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/30 focus:outline-none focus:border-brand-gold focus:bg-white/10 transition-all duration-300 resize-none"
-              />
-            </div>
-
-            <button type="submit" className="btn-primary w-full">
-              {t.contact.submit}
-            </button>
-          </form>
-        </div>
-      </div>
-    </section>
-  );
-}
-
-export function ServicesSection() {
-  const { t } = useI18n();
-
-  return (
-    <section id="services" className="relative py-32 bg-brand-navy-light/50">
-      <div className="section-container">
-        <div className="text-center max-w-3xl mx-auto mb-20">
-          <span className="section-subtitle">{t.services.subtitle}</span>
-          <h2 className="section-title text-white">{t.services.title}</h2>
-        </div>
-
-        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          {t.services.items.map((item, i) => (
-            <ServiceCard
-              key={i}
-              title={item.title}
-              description={item.description}
-              icon={item.icon}
-              index={i}
-            />
-          ))}
+              <input className={fieldCls} type="tel" placeholder={t.contact.phone} aria-label={t.contact.phone} value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
+              <textarea className={`${fieldCls} min-h-[160px] resize-y`} required placeholder={t.contact.message} aria-label={t.contact.message} value={form.message} onChange={(e) => setForm({ ...form, message: e.target.value })} />
+              <button type="submit" className="btn-primary w-full">
+                {t.contact.submit}
+              </button>
+            </form>
+          </Reveal>
         </div>
       </div>
     </section>
